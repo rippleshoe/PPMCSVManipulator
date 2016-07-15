@@ -12,13 +12,13 @@ Public Class Form1
     Private Sub ButBrowse_Click(sender As Object, e As EventArgs) Handles ButBrowse.Click
         Dim fd As OpenFileDialog = New OpenFileDialog()
         Dim strFileName As String
-
+        'Browse for file
         fd.Title = "Open File Dialog"
         fd.InitialDirectory = "H:/"
         fd.Filter = "All Files (*.*)|*.*|CSV (*.csv)|*.csv"
         fd.FilterIndex = 2
         fd.RestoreDirectory = True
-
+        'user presses ok, sets text box to path.
         If fd.ShowDialog() = DialogResult.OK Then
             strFileName = fd.FileName
             Path.Text = strFileName
@@ -42,9 +42,9 @@ Public Class Form1
     End Sub
 
     Private Sub ButSubmit_Click(sender As Object, e As EventArgs) Handles ButSubmit.Click
-
+        'Set variables
         Dim find(10) As String
-
+        'Apply data to array depending on combobox text.
         If ComboBox1.Text = "Concept" Then
             find(0) = "Task ID"
             find(1) = "Asset Code"
@@ -70,38 +70,37 @@ Public Class Form1
             Dim FilePath As String = Nothing
             Dim proceed As Boolean = Nothing
             Dim count As Integer = 2
-
+            'setup file path
             Dim parts() As String = Split(Path.Text, ".")
             FilePath = parts(0) + "." + parts(1)
-
             FilePath = FilePath & ".xlsx"
-
+            'run conversion
             Call ConvertCSVToExcel(Path.Text, FilePath)
-
             FileName = FilePath
-
-
-
+            'try to open file
             Try
                 xlBooks = xlApp.Workbooks
                 xlBook = xlBooks.Open(FileName)
                 xlApp.Visible = True
                 xlSheet = xlBook.Worksheets(1)
                 proceed = True
+                'if fail attempt to stop.
             Catch ex As Exception
                 MsgBox("Please Close all export files")
                 proceed = False
             End Try
+            'only if above is success, proceed
             If proceed = True Then
                 xlApp.ScreenUpdating = False
-
+                'add new sheet for transfer
                 xlBook.Sheets.Add()
                 xlBook.Worksheets(1).activate
-
+                'collect the letter
                 letter = Filldata.ColSelect(colnum)
                 CellNumber = CountCells(letter, 2)
 
                 'Sheet Columns and data fill_________________________________________________
+                'finds data depending on coloum headings, if it cant find the coloum, notifies you then skips.
 
                 Try
                     Call Filldata.FillData(find(0), CellNumber)
@@ -170,6 +169,7 @@ Public Class Form1
                 End Try
 
                 'Validation Sheet__________________________________________________
+                'runs validation on the sheet (Y/N)
 
                 xlBook.Sheets.Add()
                 xlSheet = xlBook.Worksheets(2)
@@ -184,6 +184,7 @@ Public Class Form1
                 xlBook.Worksheets(1).activate
 
                 'Validation Columns and data _______________________________________
+                'Adds specific validation to cells.
 
                 CellNumber = CellNumber - 1
                 Call FillValidatedColumn("Good Condition", CellNumber)
@@ -196,6 +197,7 @@ Public Class Form1
                 Call FillBlankColumn("Engineer", CellNumber)
 
                 'Colouring Cells_____________________________________________________
+                'colours cells depending on what is editable and what isnt.
 
                 Dim ColCount As Integer = Nothing
                 Dim RowCount As Integer = Nothing
@@ -203,35 +205,28 @@ Public Class Form1
                 Dim RightCell As String = Nothing
 
                 xlSheet.Range("A1").Select()
-
+                'set top rows to dark
                 Do Until xlApp.Selection.value = Nothing
                     Call ColorDark()
                     xlApp.Selection.Offset(0, 1).Select
-
                 Loop
 
                 xlSheet.Range("A2").Select()
-
+                'count coloums
                 Do Until xlApp.Selection.value = Nothing
-
                     ColCount = ColCount + 1
                     xlApp.Selection.Offset(0, 1).Select
-
                 Loop
 
                 LockLetter = Filldata.ColSelect(ColCount)
-
                 xlSheet.Range("A2").Select()
-
+                'count rows
                 Do Until xlApp.Selection.value = Nothing
-
                     RowCount = RowCount + 1
                     xlApp.Selection.Offset(1, 0).Select
-
                 Loop
 
                 RightCell = LockLetter & (RowCount + 1)
-
 
                 With xlSheet.Range("A2:" & RightCell).Interior
                     .Pattern = Excel.XlPattern.xlPatternSolid
@@ -242,18 +237,12 @@ Public Class Form1
                 End With
 
                 xlBook.Worksheets(1).Rows(count & ":" & (CellNumber + 1)).RowHeight = 40
-
                 count = 0
-
                 xlApp.DisplayAlerts = False
-
                 xlApp.Sheets(3).delete
-
                 xlSheet = xlBook.Worksheets(1)
                 xlBook.Worksheets(1).activate
-
                 xlSheet.Name = "Export"
-
                 CellNumber = CellNumber + 3
 
                 'Sheet Bottom_________________________________________________
